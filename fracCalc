@@ -1,0 +1,169 @@
+/*
+ * Ally Zitzka
+ * p2
+ * 3 January 2018
+ */
+import java.util.Scanner;
+
+public class FracCalc{
+    public static void main(String[] args){
+        Scanner console = new Scanner(System.in);
+        System.out.print("Enter fraction: ");
+        String input = console.nextLine();
+        while(!input.equalsIgnoreCase("quit")){
+            String frac = processCommand(input);
+            System.out.println(frac);
+            System.out.print("Enter fraction: ");
+            input = console.nextLine();
+        }
+    }
+    public static String processCommand(String input){
+        if(input.contains(" ")){
+            String frac1 = input.substring(0, input.indexOf(" ")); // splits off first fraction
+            input = input.substring(input.indexOf(" ") + 1); 
+            char operation = input.charAt(0); // gets operation type
+            input = input.substring(input.indexOf(" ") + 1);
+            String frac2 = input; // sets second fraction
+            frac1 = processFraction(frac1);
+            frac2 = processFraction(frac2);
+            input = calculation(frac1, frac2, operation);
+        } else{
+            input = processFraction(input);
+        }
+        input = convertToOutput(input);
+        return input;
+    }
+    public static String processFraction(String input){ // converts any number to a reduced improper fraction
+        int negCount = 0;
+        boolean neg = false;
+        int num = 0;
+        int den = 0;
+        int big = 0;
+        for(int i = 0; i < input.length(); i++){ // finds number of negative signs
+            if(input.charAt(i) == '-'){
+                negCount++;
+            }
+        }
+        if(negCount % 2 != 0){ // checks if whole fraction is negative
+            neg = true;
+        }
+        if(!input.contains("_") && !input.contains("/")){ // checks for whole number then splits
+            num = Math.abs(Integer.parseInt(input));
+            den = 1;
+        } else if(input.contains("_") && input.contains("/")){ // checks for mixed number then splits and converts to improper
+            big = Math.abs(Integer.parseInt(input.substring(0, input.indexOf("_"))));
+            input = input.substring(input.indexOf("_") + 1);
+            num = Math.abs(Integer.parseInt(input.substring(0, input.indexOf("/"))));
+            input = input.substring(input.indexOf("/") + 1);
+            den = Math.abs(Integer.parseInt(input.substring(0)));
+            big *= den;
+            num += big;
+        } else if(!input.contains("_") && input.contains("/")){ // separates fraction to numerator and denominator
+            num = Math.abs(Integer.parseInt(input.substring(0, input.indexOf("/"))));
+            den = Math.abs(Integer.parseInt(input.substring(input.indexOf("/") + 1)));
+        }
+        int divisor = gcd(num, den);
+        num /= divisor;
+        den /= divisor; // reduces fraction
+        input = num + "/" + den;
+        if(den <= 1){
+            input = "" + num + "/1";
+        }
+        if(neg == true){
+            input = "-" + input;
+        }
+        return input;
+    }
+    public static int gcd(int a, int b){
+        if(b==0){
+            return a;
+        } else {
+            return gcd(b, a%b);
+        }
+    }
+    public static String convertToOutput(String frac){
+        int negCount = 0;
+        boolean neg = false;
+        for(int i = 0; i < frac.length(); i++){ // finds number of negative signs
+            if(frac.charAt(i) == '-'){
+                negCount++;
+            }
+        }
+        if(negCount % 2 != 0){
+            neg = true;
+        }
+        int num = Math.abs(Integer.parseInt(frac.substring(0, frac.indexOf("/"))));
+        int den = Math.abs(Integer.parseInt(frac.substring(frac.indexOf("/") + 1)));
+        int divisor = gcd(num, den); // simplifies fraction
+        num /= divisor;
+        den /= divisor;
+        int whole = num / den;
+        num = num % den;
+        if(whole > 0 && num > 0){
+            frac = whole + "_" + num + "/" + den;
+        } else if(whole > 0 && num == 0){
+            frac = whole + "";
+        } else if(whole == 0 && num > 0){
+            frac = num + "/" + den;
+        }
+        if(neg == true){
+            frac = "-" + frac;
+        }
+        if(whole == 0 && num == 0){
+            frac = "0";
+        }
+        return frac;
+    }
+    public static String calculation(String frac1, String frac2, char operation){
+        String complete = "";
+        if(operation == '+'){ // checks type of operation
+            complete = addition(frac1, frac2);
+        } else if(operation == '-'){
+            if(!frac2.contains("-")){
+                frac2 = "-" + frac2; // deals with negative fractions
+            } else if(frac2.contains("-")){
+                frac2 = frac2.substring(frac2.indexOf("-") + 1);
+            }
+            complete = addition(frac1, frac2);
+        }else if(operation == '*'){
+            complete = multiply(frac1, frac2);
+        }else if(operation == '/'){
+            complete = divide(frac1, frac2);
+        }
+        return complete;
+    }
+    public static String addition(String frac1, String frac2){ // adds two fractions together
+        int num1 = Integer.parseInt(frac1.substring(0, frac1.indexOf("/")));
+        int den1 = Integer.parseInt(frac1.substring(frac1.indexOf("/") + 1));
+        int num2 = Integer.parseInt(frac2.substring(0, frac2.indexOf("/")));
+        int den2 = Integer.parseInt(frac2.substring(frac2.indexOf("/") + 1));
+        num1 *= den2; // gets numerators to common denominator
+        num2 *= den1;
+        num1 += num2; // adds numerators with common denominator
+        den1 *= den2;
+        String output = num1 + "/" + den1; // formats fraction after calculation
+        return output;
+    }
+    public static String multiply(String frac1, String frac2){
+        int num1 = Integer.parseInt(frac1.substring(0, frac1.indexOf("/")));
+        int den1 = Integer.parseInt(frac1.substring(frac1.indexOf("/") + 1));
+        int num2 = Integer.parseInt(frac2.substring(0, frac2.indexOf("/")));
+        int den2 = Integer.parseInt(frac2.substring(frac2.indexOf("/") + 1));
+        num1 *= num2; // multiplies numerators
+        den1 *= den2; // multiplies denominators
+        String output = num1 + "/" + den1;
+        return output;
+    }
+    public static String divide(String frac1, String frac2){
+        int num1 = Integer.parseInt(frac1.substring(0, frac1.indexOf("/")));
+        int den1 = Integer.parseInt(frac1.substring(frac1.indexOf("/") + 1));
+        int num = Integer.parseInt(frac2.substring(0, frac2.indexOf("/")));
+        int den = Integer.parseInt(frac2.substring(frac2.indexOf("/") + 1));
+        int num2 = den; // flips numerator and denominator of second fraction
+        int den2 = num;
+        frac1 = num1 + "/" + den1;
+        frac2 = num2 + "/" + den2;
+        String output = multiply(frac1, frac2); // sends new fractions to multiply method
+        return output;
+    }
+}
